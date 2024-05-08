@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="static/w3.css">
+	<style>
+		table {
+		  font-family: arial, sans-serif;
+		  border-collapse: collapse;
+		  width: 100%;
+		}
+		
+		td, th {
+		  border: 1px solid #dddddd;
+		  text-align: left;
+		  padding: 8px;
+		}
+		
+		tr:nth-child(even) {
+		  background-color: #dddddd;
+		}
+		</style>
+    <title>Manga OCR</title>
+</head>
+<body style="width:100%; height:100%; display:flex; justify-content:space-between; padding:0; margin:0">
+    <div style="width:50%; height:100%; padding: 20px">
+	<div style="display:flex; justify-content:space-between; width:100%; height:2.5rem">
+		<input type="file" id="fileUploadControl" webkitdirectory style="display:none">
+		<button style="width:45%; height:2.5rem" id="labelUpload">
+			Chọn thư mục input
+		</button>
+		<button style="width:45%; height:2.5rem; display:none" id="buttonUpload">
+			Chọn lại
+		</button>
+		<span style="width:45%; display:flex; justify-content:center; align-items:center" id="inputShow">0 Tệp được chọn</span>
+	</div>
+	<div style="width:100%; padding-top:30px">
+		<button style="width:100%; height:2.5rem" id="scan">
+			Tiến hành quét
+		</button>
+	</div>
+	<div style="width:100%; padding-top:30px">
+		<div class="w3-light-grey w3-large">
+    			<div class="w3-container w3-green" style="width:50%" id="progress">50%</div>
+  		</div>
+    	</div>
+	<div style="width:100%; padding-top:30px; display:flex; justify-content:space-between;">
+		<button style="width:30%; height:2.5rem" id="reset">
+			Reset
+		</button>
+		<button style="width:30%; height:2.5rem" id="prev">
+			<<< Trước
+		</button>
+		<button style="width:30%; height:2.5rem" id="next">
+			Sau >>>
+		</button>
+	</div>
+	<div style="width:100%; padding-top:30px; display:flex; justify-content:space-between;">
+		<textarea style="width: 100%;" disabled id="text" label="result"></textarea>
+	</div>
+    </div>
+    <div style="width:50%; height:100%; padding: 20px">
+		<img src="test.jpg" style="width:100%" id="preview"/>
+    </div>
+</body>
+<script>
+let inputDir = "0 Tệp được chọn"
+let total = 0
+let realTotal = 1
+let allImages = []
+let current_index = 0
+let current_text = ""
+let current_bbox = ""
+
+document.getElementById("labelUpload").addEventListener('click', function () {
+	document.getElementById('fileUploadControl').click()
+});
+
+document.getElementById('fileUploadControl').addEventListener('change', function () {
+	window.localStorage.setItem("folder", "random_string")
+	for (file of this.files) {
+		exts = file.name.split(".")
+		ext = exts[exts.length - 1]
+		if (ext === "png" | ext === "jpg" | ext === "JPEG" | ext === 'jpeg' | file.type === "image/jpeg" | file.type === "image/png") {
+			allImages.push(file)
+		}
+	}
+	total = 0
+	realTotal = allImages.length
+	inputDir = this.files.length + " Tệp được chọn (có " + realTotal + " ảnh)";
+    document.getElementById("labelUpload").style.display = "none"; 
+    document.getElementById("buttonUpload").style.display = "initial";
+    document.getElementById("inputShow").innerText = inputDir;
+});
+
+document.getElementById('buttonUpload').addEventListener('click', function () {
+	total = 0
+    realTotal = 1
+    allImages = []
+    inputDir = "0 Tệp được chọn";
+    document.getElementById("labelUpload").style.display = "initial"; 
+    document.getElementById("buttonUpload").style.display = "none"; 
+    document.getElementById("inputShow").innerText = inputDir;
+    document.getElementById('fileUploadControl').value = "";
+});
+
+document.getElementById('scan').addEventListener('click', async function () {
+	let scanAll=[]
+	let total = 0
+	for (file of allImages) {
+		scanAll.push(scanOneFile(file))
+	}
+	let results = await Promise.all(scanAll);
+})
+
+async function scanOneFile(file) {
+	const folder = window.localStorage.getItem("folder")
+	var data = new FormData()
+	data.append('file', file)
+	data.append('folder', folder)
+	result = await fetch(endpoint + "scan", {
+		method: 'POST',
+		body: data
+	})
+	.then(res => {
+		return res.json()
+	}).then(res => res.json()).then(res => {
+		if (res.message==="SUCCESS") {
+			total += 1
+			document.getElementById('progress').style.width = parseInt((total/realTotal)*100) + "%"
+		}
+		return res
+	})
+	return result
+}
+
+document.getElementById('next').addEventListener('click', async function () {
+	if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
+	current_index += 1
+	if (current_index >= realTotal) {
+		current_index = realTotal - 1
+	}
+	document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
+	get_current(llImages[current_index])
+})
+
+document.getElementById('prev').addEventListener('click', async function () {
+	if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
+	current_index -= 1
+	if (current_index < 0) {
+		current_index = 0
+	}
+	document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
+	get_current(llImages[current_index])
+})
+
+async function get_current(file) {
+	const folder = window.localStorage.getItem("folder")
+	current_text = await fetch(endpoint + "text/" + folder + "/" + file.name + ".txt").then(res => res.text())
+	current_bbox = await fetch(endpoint + "bbox/" + folder + "/" + file.name + ".txt").then(res => res.text())
+}
+
+function reset() {
+	current_text = ""
+	current_bbox = ""
+	
+}
+
+function change_order(el) {
+	const folder = window.localStorage.getItem("folder")
+	current_bbox += el.bbox
+	current_text += el.text
+	fetch(endpoint + "update/" + folder + "/" + allImages[current_index].name).then(res => res.json())
+	.then(res => {
+		if(res.message === "SUCCESS") {
+			console.log("update success")
+		} else {
+			alert("Update không thành công")
+		}
+	})
+	.catch(e => {
+		alert("Update không thành công")
+	})
+}
+
+function draw_box(res) {
+	lines = res['sub_text'].split('\n')
+	let text_boxes = ""
+	let x1, y1, width, height
+	let image_width = document.getElementById('before').clientWidth
+	let real_width = document.getElementById('before').naturalWidth
+	let ratio = image_width/real_width
+	let area
+	for (line in lines) {
+		if (line %4 == 2) {
+			let character_area = area/(lines[line].length)
+			text_boxes += `<div class="text-box" style="top:${y1*ratio}px; left:${x1*ratio}px; width:${width*ratio}px; height:${height*ratio}px;" bbox="" text="" onclick="function(){change_order(this)}"></div>`
+			x1 = 0
+			y1 = 0
+			width = 0
+			height = 0
+		}
+		if (line %4 == 0) {
+			let values = lines[line].split(' ')
+			x1 = parseFloat(values[0])
+			y1 = parseFloat(values[1])
+			let x2 = parseFloat(values[2])
+			let y2 = parseFloat(values[3])
+			width = x2 - x1
+			height = y2 - y1
+			area = width*ratio*height*ratio
+		}
+	}
+	document.getElementById("wrap-result").innerHTML = document.getElementById("wrap-result").innerHTML + text_boxes
+}
+
+</script>
+</html>
