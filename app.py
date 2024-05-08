@@ -24,8 +24,8 @@ mocr = MangaOcr()
 load_textdetector_model(use_cuda)
 
 def infer(img, foldername, filename, lang):
-    separator = '\n.\n'
-    re_str = r'\n\.\n'
+    separator = '\n@@@@@-mangatool-@@@@@\n'
+    re_str = r'\n@@@@@-mangatool-@@@@@\n'
     mask, mask_refined, blk_list = dispatch_textdetector(img, use_cuda)
     torch.cuda.empty_cache()
 
@@ -69,7 +69,7 @@ def infer(img, foldername, filename, lang):
         xmax = img.shape[1] if xmax >  img.shape[1] else xmax
         ymax = img.shape[0] if ymax >  img.shape[0] else ymax
         #IMPORTANT ===================================================================================
-        text = mocr(img[int(ymin):int(ymax), int(xmin):int(xmax), :])
+        text = mocr(Image.fromarray(img[int(ymin):int(ymax), int(xmin):int(xmax), :]))
         if use_cuda:
             torch.cuda.empty_cache()
         texts.append(text)
@@ -123,13 +123,15 @@ def infer(img, foldername, filename, lang):
     text_ref = separator.join(final_text)
     text_ref = re.sub(re_str, '', text_ref)
     if not text_ref == "":
+        if not os.path.exists('output/' + foldername + "/"):
+            os.mkdir('output/' + foldername + "/")
         with open('output/' + foldername + "/" + filename.split('.')[0] + '.txt', 'w+', encoding="utf-8") as f:
             f.write(text)
         f.close()
         np.savetxt('output/' + foldername + '/' + filename.split('.')[0] + '_bbox.txt', final_bboxes.astype(int))
-        np.savetxt('output/' + foldername + '/' + filename.split('.')[0] + '_order.txt', np.array(range(len(final_bboxes))).astype(int))
+        np.savetxt('output/' + foldername + '/' + filename.split('.')[0] + '_order.txt', np.array(range(len(final_bboxes))).astype(int), fmt="%d")
 
-    return text, final_bboxes.tostring()
+    return text, np.array2string(final_bboxes, precision=2, separator=',')
         
 def sub(img, foldername, filename, lang='vi'):
     img = cv2.cvtColor(np.array(img).astype('uint8'), cv2.COLOR_RGB2BGR)
@@ -175,7 +177,22 @@ async def bbox_file(foldername, filename):
 
 @app.get("/order/{foldername}/{filename}")
 async def order_file(foldername, filename):
-    return FileResponse('output/' + foldername + "/" + filename + "_bbox.txt")
+    return FileResponse('output/' + foldername + "/" + filename + "_order.txt")
+
+@app.post("/update/{foldername}/{filename}")
+async def update_file(request: Request, foldername, filename):
+    payload = await request.json()
+    try:
+        if 'order' in payload:
+            with open('output/' + foldername + "/" + filename + '_order.txt', 'w+', encoding="utf-8") as f:
+                f.write(payload['order'])
+        if 'text' in payload:
+            with open('output/' + foldername + "/" + filename + '.txt', 'w+', encoding="utf-8") as f:
+                f.write(payload['text'])
+        return {"message": "SUCCESS"}
+    except:
+        print(traceback.format_exc())
+        return JSONResponse(content={"message": "FAILURE"}, status_code=500)
 
 @app.post('/scan')
 async def sub_(request: Request):
@@ -185,7 +202,7 @@ async def sub_(request: Request):
     keys = ['image', 'foldername', 'filename', 'lang']
     for i, key in enumerate(keys[1:]):
         if key in form:
-            param[i] = form[key]
+            param[i+1] = form[key]
         else:
             return JSONResponse(content={"message": "MISSING PARAM " + key}, status_code=400)
     
