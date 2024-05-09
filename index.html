@@ -365,8 +365,8 @@ function change_order(el) {
 
 function change_text(el) {
 	const folder = window.localStorage.getItem("folder")
-	let texts = current_text.split('\n@@@@@-mangatool-@@@@@\n')
-	let orders = current_order.split('\n')
+	let texts = current_text.split('@@@@@-mangatool-@@@@@')
+	let orders = current_order.split('\r\n')
 	let id = el.id
 	texts[parseInt(id.split("_")[1])] = el.innerText
 	current_text = texts.join('\n@@@@@-mangatool-@@@@@\n')
@@ -391,7 +391,7 @@ function change_text(el) {
 }
 
 function draw_box() {
-	let texts = current_text.split('\n@@@@@-mangatool-@@@@@\n')
+	let texts = current_text.split('@@@@@-mangatool-@@@@@')
 	let bboxes = current_bbox.split('\n')
 	let orders = current_order.split('\r\n')
 	let text_boxes = ""
