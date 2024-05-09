@@ -209,7 +209,7 @@ async def update_file(request: Request, foldername, filename):
 async def sub_(request: Request):
     form = await request.form()
     image = await read_image(request)
-    param = [image, 'example', 'test', 'jp']
+    param = [image, 'example', 'test', 'jp', 'MangaOCR']
     keys = ['image', 'foldername', 'filename', 'lang', 'tech']
     for i, key in enumerate(keys[1:]):
         if key in form:
