@@ -232,6 +232,7 @@ document.getElementById('fileUploadControl').addEventListener('change', function
     document.getElementById("inputShow").innerText = inputDir;
 	document.getElementById("preview").src = URL.createObjectURL(allImages[0])
 	document.getElementById("filename").innerHTML = allImages[0].name
+	get_current(allImages[current_index]).then(res => { draw_box() })
 });
 
 document.getElementById('buttonUpload').addEventListener('click', function () {
@@ -392,7 +393,7 @@ function change_text(el) {
 function draw_box() {
 	let texts = current_text.split('\n@@@@@-mangatool-@@@@@\n')
 	let bboxes = current_bbox.split('\n')
-	let orders = current_order.split('\n')
+	let orders = current_order.split('\r\n')
 	let text_boxes = ""
 	let x1, y1, width, height
 	let image_width = document.getElementById('preview').clientWidth
