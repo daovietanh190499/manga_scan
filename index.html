@@ -176,6 +176,23 @@ if (!window.localStorage.getItem("lang") || window.localStorage.getItem("lang") 
 	document.getElementById(window.localStorage.getItem("lang")).checked = true;
 }
 
+fetch("/folderlist").then(res => res.json())
+	.then(res => {
+		let str = ""
+		for (id in res['file_list']) {
+			let time = new Date(parseFloat(res['times'][id]) * 1000).toISOString().slice(11, 19);
+			str += `
+			<div style="width: 95%; height:3rem; justify-content: space-between; align-items: center; display: flex; border-radius: 5px; background-color: #fff; margin-top: 20px" id="${res['file_list'][id]}">
+				<span style="margin-left: 10px">${res['file_list'][id]}</span>
+				<span>${res['counts'][id]} Files </span>
+				<span style="margin-right: 10px">${time}</span>
+			</div>`
+		}
+		document.getElementById("history").innerHTML = str
+		const folder = window.localStorage.getItem("folder")
+		document.getElementById(folder).style.backgroundColor = "#00ffff"
+	})
+
 setInterval(() => {
 	fetch("/folderlist").then(res => res.json())
 	.then(res => {
@@ -190,6 +207,8 @@ setInterval(() => {
 			</div>`
 		}
 		document.getElementById("history").innerHTML = str
+		const folder = window.localStorage.getItem("folder")
+		document.getElementById(folder).style.backgroundColor = "#00ffff"
 	})
 }, 5000)
 
