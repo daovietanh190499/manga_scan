@@ -124,9 +124,11 @@ def infer(img, foldername, filename, lang, tech):
     text_ref = separator.join(final_text)
     text_ref = re.sub(re_str, '', text_ref)
     if not text_ref == "" and final_bboxes is not None:
+        if not os.path.exists('output/'):
+            os.mkdir('output/')
         if not os.path.exists('output/' + foldername + "/"):
             os.mkdir('output/' + foldername + "/")
-        with open('output/' + foldername + "/" + filename.split('.')[0] + '.txt', 'w+', encoding="utf-8") as f:
+        with open('output/' + foldername + "/" + filename.split('.')[0] + '_text.txt', 'w+', encoding="utf-8") as f:
             f.write(text)
         f.close()
         np.savetxt('output/' + foldername + '/' + filename.split('.')[0] + '_bbox.txt', final_bboxes.astype(int))
@@ -170,7 +172,7 @@ async def read_index():
 
 @app.get("/text/{foldername}/{filename}")
 async def text_file(foldername, filename):
-    with open('output/' + foldername + "/" + filename + '.txt', 'r', encoding="utf-8") as f:
+    with open('output/' + foldername + "/" + filename + '_text.txt', 'r', encoding="utf-8") as f:
         lines = f.readlines()
     res = lines[0].split('@@@@@-mangatool-@@@@@')
     return {"result": res}
@@ -204,12 +206,24 @@ async def update_file(request: Request, foldername, filename):
             np.savetxt('output/' + foldername + '/' + filename + '_order.txt', np.array(order).astype(int), fmt="%d")
         if 'text' in payload:
             separator = '@@@@@-mangatool-@@@@@'
-            with open('output/' + foldername + "/" + filename + '.txt', 'w+', encoding="utf-8") as f:
+            with open('output/' + foldername + "/" + filename + '_text.txt', 'w+', encoding="utf-8") as f:
                 f.write(separator.join(payload['text']))
         return {"message": "SUCCESS"}
     except:
         print(traceback.format_exc())
         return JSONResponse(content={"message": "FAILURE"}, status_code=500)
+
+@app.post('/generate/{foldername}')
+async def generate(foldername):
+    separator = '@@@@@-mangatool-@@@@@'
+    for file in glob.glob("output/" + foldername + "/*_text.txt"):
+        with open(file, 'r') as f:
+            lines = f.readlines()
+        if not os.path.exists('output/' + foldername + "/final/"):
+            os.mkdir('output/' + foldername + "/final/")
+        with open('output/' + foldername + "/final/" + file.split('/')[-1], 'w+') as f1:
+            f1.write(lines[0].replace(separator, '\n'))
+    return {"message": "SUCCESS"}
 
 @app.post('/scan')
 async def sub_(request: Request):
