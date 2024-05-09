@@ -123,7 +123,7 @@ def infer(img, foldername, filename, lang, tech):
     text = separator.join(final_text)
     text_ref = separator.join(final_text)
     text_ref = re.sub(re_str, '', text_ref)
-    if not text_ref == "" and not final_bboxes == None:
+    if not text_ref == "" and final_bboxes:
         if not os.path.exists('output/' + foldername + "/"):
             os.mkdir('output/' + foldername + "/")
         with open('output/' + foldername + "/" + filename.split('.')[0] + '.txt', 'w+', encoding="utf-8") as f:
