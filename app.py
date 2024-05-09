@@ -14,6 +14,7 @@ import traceback
 import numpy as np
 import os
 import re
+import glob
 from models import load_textdetector_model, dispatch_textdetector
 
 from manga_ocr import MangaOcr
@@ -23,7 +24,7 @@ use_cuda = torch.cuda.is_available()
 mocr = MangaOcr()
 load_textdetector_model(use_cuda)
 
-def infer(img, foldername, filename, lang):
+def infer(img, foldername, filename, lang, tech):
     separator = '\n@@@@@-mangatool-@@@@@\n'
     re_str = r'\n@@@@@-mangatool-@@@@@\n'
     mask, mask_refined, blk_list = dispatch_textdetector(img, use_cuda)
@@ -133,9 +134,9 @@ def infer(img, foldername, filename, lang):
 
     return text, np.array2string(final_bboxes, precision=2, separator=',')
         
-def sub(img, foldername, filename, lang='vi'):
+def sub(img, foldername, filename, lang='jp', tech="MangaOCR"):
     img = cv2.cvtColor(np.array(img).astype('uint8'), cv2.COLOR_RGB2BGR)
-    res =  infer(img, foldername, filename, lang)
+    res =  infer(img, foldername, filename, lang, tech)
     return res
 
 
@@ -179,6 +180,16 @@ async def bbox_file(foldername, filename):
 async def order_file(foldername, filename):
     return FileResponse('output/' + foldername + "/" + filename + "_order.txt")
 
+@app.get("/folderlist")
+async def folderlist():
+    lists = os.listdir("output")
+    times = []
+    counts = []
+    for file in lists:
+        counts.append(len(glob.glob("output/" + file + "/*_bbox.txt")))
+        times.append(os.path.getmtime('output/' + file))
+    return {"file_list": lists, "times": times, "counts": counts}
+
 @app.post("/update/{foldername}/{filename}")
 async def update_file(request: Request, foldername, filename):
     payload = await request.json()
@@ -199,7 +210,7 @@ async def sub_(request: Request):
     form = await request.form()
     image = await read_image(request)
     param = [image, 'example', 'test', 'jp']
-    keys = ['image', 'foldername', 'filename', 'lang']
+    keys = ['image', 'foldername', 'filename', 'lang', 'tech']
     for i, key in enumerate(keys[1:]):
         if key in form:
             param[i+1] = form[key]
