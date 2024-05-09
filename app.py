@@ -221,7 +221,7 @@ async def generate(foldername):
             lines = f.readlines()
         if not os.path.exists('output/' + foldername + "/final/"):
             os.mkdir('output/' + foldername + "/final/")
-        with open('output/' + foldername + "/final/" + file.split('/')[-1], 'w+', encoding="utf8") as f1:
+        with open('output/' + foldername + "/final/" + file.split('\\')[-1], 'w+', encoding="utf8") as f1:
             f1.write(lines[0].replace(separator, '\n'))
     return {"message": "SUCCESS"}
 
