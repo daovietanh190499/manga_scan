@@ -129,7 +129,7 @@
 		</div>
     </div>
 </div>
-<div style="width: 30%; height:100%;">
+<div style="width: 30%; height:100vh; background-color: #ddd;">
 
 </div>
 </body>
@@ -317,7 +317,7 @@ function draw_box() {
 			document.getElementById(orders[line]).innerText = num
 		}
 		if (! (line == orders.length - 1 && orders[line] === "")) {
-			str += `<tr><td>${num}</td><td>${texts[orders[line]]}</td></tr>`
+			str += `<tr><td>${num}</td><td contenteditable="true">${texts[orders[line]]}</td></tr>`
 		}
 	}
 	document.getElementById("table_body").innerHTML = str
