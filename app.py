@@ -217,11 +217,11 @@ async def update_file(request: Request, foldername, filename):
 async def generate(foldername):
     separator = '@@@@@-mangatool-@@@@@'
     for file in glob.glob("output/" + foldername + "/*_text.txt"):
-        with open(file, 'r') as f:
+        with open(file, 'r', encoding="utf8") as f:
             lines = f.readlines()
         if not os.path.exists('output/' + foldername + "/final/"):
             os.mkdir('output/' + foldername + "/final/")
-        with open('output/' + foldername + "/final/" + file.split('/')[-1], 'w+') as f1:
+        with open('output/' + foldername + "/final/" + file.split('/')[-1], 'w+', encoding="utf8") as f1:
             f1.write(lines[0].replace(separator, '\n'))
     return {"message": "SUCCESS"}
 
