@@ -62,7 +62,8 @@
 		</style>
     <title>Manga OCR</title>
 </head>
-<body style="width:100%; height:100%; display:flex; justify-content:space-between; padding:0; margin:0">
+<body style="width:100%; height:100%; display:flex; justify-content:space-between; padding:0; margin:0"></body>
+<div style="width:70%; height:100%; display:flex; justify-content:space-between; padding:0; margin:0">
     <div style="width:50%; height:100%; padding: 20px">
 	<div style="display:flex; justify-content:space-between; width:100%; height:2.5rem">
 		<input type="file" id="fileUploadControl" webkitdirectory style="display:none">
@@ -96,6 +97,14 @@
 		</button>
 	</div>
 	<div style="width:100%; padding-top:30px; display:flex; justify-content:space-between;">
+		<span style="width: 60%;" id="filename">
+			no name
+		</span>
+		<button style="width:30%; height:2.5rem" id="next">
+			Copy
+		</button>
+	</div>
+	<div style="width:100%; padding-top:10px; display:flex; justify-content:space-between; height: 50vh; overflow-y: scroll;">
 		<table>
 			<tr>
 				<th>STT</th>
@@ -119,6 +128,10 @@
 			</div>
 		</div>
     </div>
+</div>
+<div style="width: 30%; height:100%;">
+
+</div>
 </body>
 <script>
 const endpoint = "http://localhost:8000/"
@@ -159,6 +172,7 @@ document.getElementById('fileUploadControl').addEventListener('change', function
     document.getElementById("buttonUpload").style.display = "initial";
     document.getElementById("inputShow").innerText = inputDir;
 	document.getElementById("preview").src = URL.createObjectURL(allImages[0])
+	document.getElementById("filename").innerHTML = allImages[0].name
 });
 
 document.getElementById('buttonUpload').addEventListener('click', function () {
@@ -229,6 +243,7 @@ document.getElementById('prev').addEventListener('click', async function () {
 
 async function get_current(file) {
 	const folder = window.localStorage.getItem("folder")
+	document.getElementById("filename").innerText = file.name
 	current_text = await fetch(endpoint + "text/" + folder + "/" + file.name.split(".")[0]).then(res => res.text())
 	current_bbox = await fetch(endpoint + "bbox/" + folder + "/" + file.name.split(".")[0]).then(res => res.text())
 	current_order = await fetch(endpoint + "order/" + folder + "/" + file.name.split(".")[0]).then(res => res.text())
