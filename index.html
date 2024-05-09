@@ -274,12 +274,14 @@ async function scanOneFile(file) {
 		return res.json()
 	})
 	.then(res => {
-		if (res.message==="SUCCESS") {
-			total += 1
-			document.getElementById('progress').style.width = parseInt((total/realTotal)*100) + "%"
-			document.getElementById('progress').innerText = parseInt((total/realTotal)*100) + "%"
-		}
+		total += 1
+		document.getElementById('progress').style.width = parseInt((total/realTotal)*100) + "%"
+		document.getElementById('progress').innerText = parseInt((total/realTotal)*100) + "%"
 		return res
+	}).catch(e => {
+		total += 1
+		document.getElementById('progress').style.width = parseInt((total/realTotal)*100) + "%"
+		document.getElementById('progress').innerText = parseInt((total/realTotal)*100) + "%"
 	})
 	return result
 }
