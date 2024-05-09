@@ -150,15 +150,15 @@
 </div>
 </body>
 <script>
-const endpoint = window.location.host + "/"
+const endpoint = "http://" + window.location.host + "/"
 let inputDir = "0 Tệp được chọn"
 let total = 0
 let realTotal = 1
 let allImages = []
 let current_index = 0
-let current_text = ""
-let current_bbox = ""
-let current_order = ""
+let current_text = []
+let current_bbox = []
+let current_order = []
 
 if (!window.localStorage.getItem("folder") || window.localStorage.getItem("folder") === "") {
 	window.localStorage.setItem("folder", uuidv4())
@@ -310,15 +310,15 @@ document.getElementById('prev').addEventListener('click', async function () {
 async function get_current(file) {
 	const folder = window.localStorage.getItem("folder")
 	document.getElementById("filename").innerText = file.name
-	current_text = await fetch(endpoint + "text/" + folder + "/" + file.name.split(".")[0]).then(res => res.text())
-	current_bbox = await fetch(endpoint + "bbox/" + folder + "/" + file.name.split(".")[0]).then(res => res.text())
-	current_order = await fetch(endpoint + "order/" + folder + "/" + file.name.split(".")[0]).then(res => res.text())
+	current_text = await fetch(endpoint + "text/" + folder + "/" + file.name.split(".")[0]).then(res => res.json()).then(res => res['result'])
+	current_bbox = await fetch(endpoint + "bbox/" + folder + "/" + file.name.split(".")[0]).then(res => res.json()).then(res => res['result'])
+	current_order = await fetch(endpoint + "order/" + folder + "/" + file.name.split(".")[0]).then(res => res.json()).then(res => res['result'])
 	return folder
 }
 
 document.getElementById('reset').addEventListener('click', async function () {
 	if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
-	current_order = ""
+	current_order = []
 	draw_box()
 })
 
@@ -326,22 +326,41 @@ document.addEventListener("keypress", function(event) {
 	console.log(event.keyCode)
 	if (event.keyCode == 48) {
 		if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
-		current_order = ""
+		current_order = []
 		draw_box()
 	}
 });
 
+document.onkeydown = checkKey;
+function checkKey(e) {
+    e = e || window.event;
+    if (e.keyCode == '37') {
+		if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
+		current_index -= 1
+		if (current_index < 0) {
+			current_index = 0
+		}
+		document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
+		get_current(allImages[current_index]).then(res => { draw_box() })
+    }
+    else if (e.keyCode == '39') {
+		if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
+		current_index += 1
+		if (current_index >= realTotal) {
+			current_index = realTotal - 1
+		}
+		document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
+		get_current(allImages[current_index]).then(res => { draw_box() })
+    }
+}
+
 function change_order(el) {
 	const folder = window.localStorage.getItem("folder")
-	if (current_order.split('\n').includes(el.id)) {
-		if (current_order.split('\n')[current_order.split('\n').length -1] === el.id) {
-			let rm_order = current_order.split('\n')
-			rm_order.pop()
-			current_order = rm_order.join("\n")
-		}
+	if (current_order.includes(el.id)) {
+		let index = current_order.indexOf(el.id)
+		current_order.splice(index, 1)
 	} else {
-		current_order += (current_order !== "") ? '\n' : ""
-		current_order += el.id
+		current_order.push(el.id)
 	}
 	fetch(endpoint + "update/" + folder + "/" + allImages[current_index].name.split(".")[0], {
 		method: "POST",
@@ -365,11 +384,11 @@ function change_order(el) {
 
 function change_text(el) {
 	const folder = window.localStorage.getItem("folder")
-	let texts = current_text.split('@@@@@-mangatool-@@@@@')
-	let orders = current_order.split('\r\n')
+	let texts = current_text
+	let orders = current_order
 	let id = el.id
 	texts[parseInt(id.split("_")[1])] = el.innerText
-	current_text = texts.join('\n@@@@@-mangatool-@@@@@\n')
+	current_text = texts
 	fetch(endpoint + "update/" + folder + "/" + allImages[current_index].name.split(".")[0], {
 		method: "POST",
 		body: JSON.stringify({
@@ -391,9 +410,9 @@ function change_text(el) {
 }
 
 function draw_box() {
-	let texts = current_text.split('@@@@@-mangatool-@@@@@')
-	let bboxes = current_bbox.split('\n')
-	let orders = current_order.split('\r\n')
+	let texts = current_text
+	let bboxes = current_bbox
+	let orders = current_order
 	let text_boxes = ""
 	let x1, y1, width, height
 	let image_width = document.getElementById('preview').clientWidth
@@ -402,7 +421,7 @@ function draw_box() {
 	console.log(ratio)
 	for (line in bboxes) {
 		if (bboxes[line] !== "") {
-			let values = bboxes[line].split(' ')
+			let values = bboxes[line]
 			x1 = parseFloat(values[0])
 			y1 = parseFloat(values[1])
 			let x2 = parseFloat(values[2])

@@ -25,8 +25,8 @@ mocr = MangaOcr()
 load_textdetector_model(use_cuda)
 
 def infer(img, foldername, filename, lang, tech):
-    separator = '\n@@@@@-mangatool-@@@@@\n'
-    re_str = r'\n@@@@@-mangatool-@@@@@\n'
+    separator = '@@@@@-mangatool-@@@@@'
+    re_str = r'@@@@@-mangatool-@@@@@'
     mask, mask_refined, blk_list = dispatch_textdetector(img, use_cuda)
     torch.cuda.empty_cache()
 
@@ -170,15 +170,20 @@ async def read_index():
 
 @app.get("/text/{foldername}/{filename}")
 async def text_file(foldername, filename):
-    return FileResponse('output/' + foldername + "/" + filename + ".txt")
+    with open('output/' + foldername + "/" + filename + '.txt', 'r', encoding="utf-8") as f:
+        lines = f.readlines()
+    res = lines[0].split('@@@@@-mangatool-@@@@@')
+    return {"result": res}
 
 @app.get("/bbox/{foldername}/{filename}")
 async def bbox_file(foldername, filename):
-    return FileResponse('output/' + foldername + "/" + filename + "_bbox.txt")
+    bbox = np.loadtxt('output/' + foldername + "/" + filename + "_bbox.txt")
+    return {"result": bbox.tolist()}
 
 @app.get("/order/{foldername}/{filename}")
 async def order_file(foldername, filename):
-    return FileResponse('output/' + foldername + "/" + filename + "_order.txt")
+    order = np.loadtxt('output/' + foldername + "/" + filename + "_order.txt")
+    return {"result": order.tolist()}
 
 @app.get("/folderlist")
 async def folderlist():
@@ -195,11 +200,12 @@ async def update_file(request: Request, foldername, filename):
     payload = await request.json()
     try:
         if 'order' in payload:
-            with open('output/' + foldername + "/" + filename + '_order.txt', 'w+', encoding="utf-8") as f:
-                f.write(payload['order'])
+            order = [int(i) for i in payload['order']]
+            np.savetxt('output/' + foldername + '/' + filename + '_order.txt', np.array(order).astype(int), fmt="%d")
         if 'text' in payload:
+            separator = '@@@@@-mangatool-@@@@@'
             with open('output/' + foldername + "/" + filename + '.txt', 'w+', encoding="utf-8") as f:
-                f.write(payload['text'])
+                f.write(separator.join(payload['text']))
         return {"message": "SUCCESS"}
     except:
         print(traceback.format_exc())
