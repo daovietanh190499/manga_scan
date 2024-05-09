@@ -287,6 +287,33 @@ function change_order(el) {
 	// })
 }
 
+function change_text(el) {
+	const folder = window.localStorage.getItem("folder")
+	let texts = current_text.split('\n@@@@@-mangatool-@@@@@\n')
+	let orders = current_order.split('\n')
+	let id = el.id
+	texts[parseInt(id.split("_")[1])] = el.innerText
+	current_text = texts.join('\n@@@@@-mangatool-@@@@@\n')
+	fetch(endpoint + "update/" + folder + "/" + allImages[current_index].name.split(".")[0], {
+		method: "POST",
+		body: JSON.stringify({
+			"text": current_text
+		})
+	})
+	.then(res => res.json())
+	.then(res => {
+		if(res.message === "SUCCESS") {
+			console.log("update success")
+			draw_box()
+		} else {
+			alert("Update không thành công")
+		}
+	})
+	// .catch(e => {
+	// 	alert("Update không thành công")
+	// })
+}
+
 function draw_box() {
 	let texts = current_text.split('\n@@@@@-mangatool-@@@@@\n')
 	let bboxes = current_bbox.split('\n')
@@ -317,10 +344,29 @@ function draw_box() {
 			document.getElementById(orders[line]).innerText = num
 		}
 		if (! (line == orders.length - 1 && orders[line] === "")) {
-			str += `<tr><td>${num}</td><td contenteditable="true">${texts[orders[line]]}</td></tr>`
+			str += `<tr><td>${num}</td><td contenteditable="true" onchange="change_text(this)" id="text_${orders[line]}">${texts[orders[line]]}</td></tr>`
 		}
 	}
 	document.getElementById("table_body").innerHTML = str
+	fix_onChange_editable_elements()
+}
+
+function fix_onChange_editable_elements()
+{
+  var tags = document.querySelectorAll('[contenteditable=true][onChange]');//(requires FF 3.1+, Safari 3.1+, IE8+)
+  for (var i=tags.length-1; i>=0; i--) if (typeof(tags[i].onblur)!='function')
+  {
+    tags[i].onfocus = function()
+    {
+      this.data_orig=this.innerHTML;
+    };
+    tags[i].onblur = function()
+    {
+      if (this.innerHTML != this.data_orig)
+        this.onchange();
+      delete this.data_orig;
+    };
+  }
 }
 
 </script>
