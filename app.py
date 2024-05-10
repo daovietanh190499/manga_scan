@@ -238,7 +238,7 @@ async def generate(foldername):
             os.mkdir('output/' + foldername + "/final/")
         with open('output/' + foldername + "/final/" + (file.split('\\')[-1])[:-9] + '.txt', 'w+', encoding="utf8") as f1:
             lines_ = lines[0].split(separator)
-            new_lines = [lines_[i] for i in order]
+            new_lines = [lines_[int(i)] for i in order]
             f1.write('\n'.join(new_lines))
     return {"message": "SUCCESS"}
 
