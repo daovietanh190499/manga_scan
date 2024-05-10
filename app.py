@@ -18,6 +18,17 @@ import glob
 from models import load_textdetector_model, dispatch_textdetector
 
 from manga_ocr import MangaOcr
+from google.cloud import vision
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="secrets.json"
+
+client = vision.ImageAnnotatorClient()
+
+def ggocr(img):
+    image = vision.Image(content=content)
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+    return texts
 
 use_cuda = torch.cuda.is_available()
 
