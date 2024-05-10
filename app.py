@@ -233,7 +233,7 @@ async def generate(foldername):
     for file in glob.glob("output/" + foldername + "/*_text.txt"):
         with open(file, 'r', encoding="utf8") as f:
             lines = f.readlines()
-        order = np.loadtxt(file[:-9] + '_order.txt').asytype(int)
+        order = np.loadtxt(file[:-9] + '_order.txt').astype(int)
         if not os.path.exists('output/' + foldername + "/final/"):
             os.mkdir('output/' + foldername + "/final/")
         with open('output/' + foldername + "/final/" + (file.split('\\')[-1])[:-9] + '.txt', 'w+', encoding="utf8") as f1:
