@@ -251,7 +251,6 @@ document.getElementById('fileUploadControl').addEventListener('change', function
     document.getElementById("inputShow").innerText = inputDir;
 	document.getElementById("preview").src = URL.createObjectURL(allImages[0])
 	document.getElementById("filename").innerHTML = allImages[0].name
-	get_current(allImages[current_index]).then(res => { draw_box() })
 });
 
 document.getElementById('buttonUpload').addEventListener('click', function () {
@@ -313,7 +312,6 @@ document.getElementById('next').addEventListener('click', async function () {
 		current_index = realTotal - 1
 	}
 	document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
-	get_current(allImages[current_index]).then(res => { draw_box() })
 })
 
 document.getElementById('prev').addEventListener('click', async function () {
@@ -323,7 +321,6 @@ document.getElementById('prev').addEventListener('click', async function () {
 		current_index = 0
 	}
 	document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
-	get_current(allImages[current_index]).then(res => { draw_box() })
 })
 
 document.getElementById('generate').addEventListener('click', async function () {
@@ -375,7 +372,6 @@ function checkKey(e) {
 			current_index = 0
 		}
 		document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
-		get_current(allImages[current_index]).then(res => { draw_box() })
     }
     else if (e.keyCode == '39') {
 		if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
@@ -384,7 +380,6 @@ function checkKey(e) {
 			current_index = realTotal - 1
 		}
 		document.getElementById("preview").src = URL.createObjectURL(allImages[current_index])
-		get_current(allImages[current_index]).then(res => { draw_box() })
     }
 }
 
@@ -447,7 +442,7 @@ function change_text(el) {
 }
 
 document.getElementById('preview').onload = function () {
-	console.log("loaded")
+	get_current(allImages[current_index]).then(res => { draw_box() })
 }
 
 function draw_box() {
