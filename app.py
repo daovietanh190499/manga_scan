@@ -15,10 +15,19 @@ import numpy as np
 import os
 import re
 import glob
-from models import load_textdetector_model, dispatch_textdetector
+from models import load_textdetector_model, dispatch_textdetector, OCRMIT48pxCTC
 
 from manga_ocr import MangaOcr
 from google.cloud import vision
+
+setup_params = OCRMIT48pxCTC.setup_params
+setup_params['device']['select'] = 'cuda' if torch.cuda.is_available() else 'cpu'
+setup_params['chunk_size']['select'] = 16
+ocr = OCRMIT48pxCTC(**setup_params)
+
+import easyocr
+reader = easyocr.Reader(['en'])
+result = reader.readtext('chinese.jpg')
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="secrets.json"
 
@@ -39,6 +48,8 @@ def infer(img, foldername, filename, lang, tech):
     separator = '@@@@@-mangatool-@@@@@'
     re_str = r'@@@@@-mangatool-@@@@@'
     mask, mask_refined, blk_list = dispatch_textdetector(img, use_cuda)
+    blk_result = ocr.ocr_blk_list(img, blk_list)
+    print(blk_result[0].text)
     torch.cuda.empty_cache()
 
     mask = cv2.dilate((mask > 170).astype('uint8')*255, np.ones((5,5), np.uint8), iterations=5)
@@ -191,7 +202,7 @@ async def text_file(foldername, filename):
 @app.get("/bbox/{foldername}/{filename}")
 async def bbox_file(foldername, filename):
     bbox = np.loadtxt('output/' + foldername + "/" + filename + "_bbox.txt")
-    if bbox.ndim = 1:
+    if bbox.ndim == 1:
         bbox = np.array([bbox])
     return {"result": bbox.tolist()}
 
