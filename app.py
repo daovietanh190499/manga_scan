@@ -234,6 +234,10 @@ async def generate(foldername):
         with open(file, 'r', encoding="utf8") as f:
             lines = f.readlines()
         order = np.loadtxt(file[:-9] + '_order.txt').astype(int)
+        result = order.tolist()
+        if isinstance(order.tolist(), int) or isinstance(order.tolist(), float):
+            result = [order.tolist()]
+        order = np.array(result).astype(int)
         if not os.path.exists('output/' + foldername + "/final/"):
             os.mkdir('output/' + foldername + "/final/")
         with open('output/' + foldername + "/final/" + (file.split('\\')[-1])[:-9] + '.txt', 'w+', encoding="utf8") as f1:
