@@ -446,6 +446,10 @@ function change_text(el) {
 	// })
 }
 
+document.getElementById('preview').onload = function () {
+	console.log("loaded")
+}
+
 function draw_box() {
 	let texts = current_text
 	let bboxes = current_bbox
