@@ -191,6 +191,8 @@ async def text_file(foldername, filename):
 @app.get("/bbox/{foldername}/{filename}")
 async def bbox_file(foldername, filename):
     bbox = np.loadtxt('output/' + foldername + "/" + filename + "_bbox.txt")
+    if bbox.ndim = 1:
+        bbox = np.array([bbox])
     return {"result": bbox.tolist()}
 
 @app.get("/order/{foldername}/{filename}")
