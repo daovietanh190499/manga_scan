@@ -25,9 +25,9 @@ setup_params['device']['select'] = 'cuda' if torch.cuda.is_available() else 'cpu
 setup_params['chunk_size']['select'] = 16
 ocr = OCRMIT48pxCTC(**setup_params)
 
-import easyocr
-reader = easyocr.Reader(['en'])
-result = reader.readtext('chinese.jpg')
+# import easyocr
+# reader = easyocr.Reader(['en'])
+# result = reader.readtext('chinese.jpg')
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="secrets.json"
 
