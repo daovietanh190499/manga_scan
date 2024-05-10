@@ -219,10 +219,13 @@ async def generate(foldername):
     for file in glob.glob("output/" + foldername + "/*_text.txt"):
         with open(file, 'r', encoding="utf8") as f:
             lines = f.readlines()
+        order = np.loadtxt(file[:-9] + '_order.txt')
         if not os.path.exists('output/' + foldername + "/final/"):
             os.mkdir('output/' + foldername + "/final/")
         with open('output/' + foldername + "/final/" + (file.split('\\')[-1])[:-9] + '.txt', 'w+', encoding="utf8") as f1:
-            f1.write(lines[0].replace(separator, '\n'))
+            lines_ = lines[0].split(separator)
+            new_lines = [lines_[i] for i in order]
+            f1.write('\n'.join(new_lines))
     return {"message": "SUCCESS"}
 
 @app.post('/scan')
