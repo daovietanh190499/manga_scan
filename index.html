@@ -390,7 +390,7 @@ function checkKey(e) {
 
 function change_order(el) {
 	const folder = window.localStorage.getItem("folder")
-	if (current_order.includes(el.id)) {
+	if (current_order.includes(el.id) || current_order.includes(parseInt(el.id))) {
 		let index = current_order.indexOf(el.id)
 		current_order.splice(index, 1)
 	} else {
