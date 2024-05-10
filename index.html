@@ -393,9 +393,9 @@ function change_order(el) {
 	if (current_order.includes(el.id) || current_order.includes(parseInt(el.id))) {
 		let index = current_order.indexOf(el.id)
 		current_order.splice(index, 1)
-		if (typeof current_order === 'number') {
-			current_order = [current_order]
-		}
+		// if (typeof current_order === 'number') {
+		// 	current_order = [current_order]
+		// }
 	} else {
 		current_order.push(el.id)
 	}

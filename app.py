@@ -196,7 +196,10 @@ async def bbox_file(foldername, filename):
 @app.get("/order/{foldername}/{filename}")
 async def order_file(foldername, filename):
     order = np.loadtxt('output/' + foldername + "/" + filename + "_order.txt")
-    return {"result": order.tolist()}
+    result = order.tolist()
+    if isinstance(order.tolist(), int) or isinstance(order.tolist(), float):
+        result = [order.tolist()]
+    return {"result": result}
 
 @app.get("/folderlist")
 async def folderlist():
