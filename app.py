@@ -233,7 +233,7 @@ async def order_file(foldername, filename):
     result = order.tolist()
     if isinstance(order.tolist(), int) or isinstance(order.tolist(), float):
         result = [order.tolist()]
-    if result[0] = -1:
+    if result[0] == -1:
         result = []
     return {"result": result}
 
@@ -280,7 +280,7 @@ async def generate(foldername):
         result = order.tolist()
         if isinstance(order.tolist(), int) or isinstance(order.tolist(), float):
             result = [order.tolist()]
-        if result[0] = -1:
+        if result[0] == -1:
             result = []
         order = result
         if not os.path.exists('output/' + foldername + "/final/"):
