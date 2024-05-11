@@ -233,6 +233,8 @@ async def order_file(foldername, filename):
     result = order.tolist()
     if isinstance(order.tolist(), int) or isinstance(order.tolist(), float):
         result = [order.tolist()]
+    if result[0] = -1:
+        result = []
     return {"result": result}
 
 @app.get("/folderlist")
@@ -250,6 +252,8 @@ async def update_file(request: Request, foldername, filename):
     payload = await request.json()
     try:
         if 'order' in payload:
+            if len(payload['order']) == 0:
+                payload['order'] = ['-1']
             order = [int(i) for i in payload['order']]
             np.savetxt('output/' + foldername + '/' + filename + '_order.txt', np.array(order).astype(int), fmt="%d")
         if 'text' in payload:
@@ -276,7 +280,9 @@ async def generate(foldername):
         result = order.tolist()
         if isinstance(order.tolist(), int) or isinstance(order.tolist(), float):
             result = [order.tolist()]
-        order = np.array(result).astype(int)
+        if result[0] = -1:
+            result = []
+        order = result
         if not os.path.exists('output/' + foldername + "/final/"):
             os.mkdir('output/' + foldername + "/final/")
         with open('output/' + foldername + "/final/" + (file.split('\\')[-1])[:-9] + '.txt', 'w+', encoding="utf8") as f1:
