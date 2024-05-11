@@ -26,8 +26,9 @@ setup_params['device']['select'] = 'cuda' if torch.cuda.is_available() else 'cpu
 setup_params['chunk_size']['select'] = 16
 ocr = OCRMIT48pxCTC(**setup_params)
 
-# import easyocr
-# reader = easyocr.Reader(['en'])
+import easyocr
+reader = easyocr.Reader(['en'])
+# reader = easyocr.Reader(['en'], detection='DB', recognition = 'Transformer')
 # result = reader.readtext('chinese.jpg')
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="secrets.json"
@@ -49,8 +50,7 @@ def infer(img, foldername, filename, lang, tech):
     separator = '@@@@@-mangatool-@@@@@'
     re_str = r'@@@@@-mangatool-@@@@@'
     mask, mask_refined, blk_list = dispatch_textdetector(img, use_cuda)
-    blk_result = ocr.ocr_blk_list(img, blk_list)
-    print(blk_result)
+    ocr.ocr_blk_list(img, blk_list)
     torch.cuda.empty_cache()
 
     mask = cv2.dilate((mask > 170).astype('uint8')*255, np.ones((5,5), np.uint8), iterations=5)
@@ -93,7 +93,11 @@ def infer(img, foldername, filename, lang, tech):
         xmax = img.shape[1] if xmax >  img.shape[1] else xmax
         ymax = img.shape[0] if ymax >  img.shape[0] else ymax
         #IMPORTANT ===================================================================================
-        text = mocr(Image.fromarray(img[int(ymin):int(ymax), int(xmin):int(xmax), :]))
+        if lang == "jp":
+            text = mocr(Image.fromarray(img[int(ymin):int(ymax), int(xmin):int(xmax), :]))
+        elif lang == "en":
+            text = " ".join(reader.readtext(img[int(ymin):int(ymax), int(xmin):int(xmax), :], detail=0))
+            text = text.lower()
         if use_cuda:
             torch.cuda.empty_cache()
         texts.append(text)
@@ -128,24 +132,40 @@ def infer(img, foldername, filename, lang, tech):
 
     final_text = []
     final_bboxes = None
-    for _bboxes, _texts in zip(frame_boxes, frame_texts):
-        if len(_bboxes) != 0:
-            a = np.array(_bboxes)
-            arg =  np.argsort(a[:,1])
-            # arg = np.argsort(img.shape[1] - (a[:,0] + a[:,2]))
-            # arg1 =  np.argsort(a[:,1])
-            # arg = np.argsort(np.argsort(arg)*np.argsort(arg1)*(img.shape[1] - a[:,0])*(a[:,1]))
-            _texts = np.array(_texts)[arg.astype(int)]
-            final_text.append(separator.join(_texts))
+
+    if lang=="jp" or lang=="en":
+        for _bboxes, _texts in zip(frame_boxes, frame_texts):
+            if len(_bboxes) != 0:
+                a = np.array(_bboxes)
+                arg =  np.argsort(a[:,1])
+                # arg = np.argsort(img.shape[1] - (a[:,0] + a[:,2]))
+                # arg1 =  np.argsort(a[:,1])
+                # arg = np.argsort(np.argsort(arg)*np.argsort(arg1)*(img.shape[1] - a[:,0])*(a[:,1]))
+                _texts = np.array(_texts)[arg.astype(int)]
+                final_text.append(separator.join(_texts))
+                if final_bboxes is None:
+                    final_bboxes = a[arg.astype(int)]
+                else:
+                    final_bboxes = np.concatenate((final_bboxes, a[arg.astype(int)]))
+
+    elif lang=="enp":
+        for i, blk in enumerate(blk_list):
+            xmin, ymin, xmax, ymax = blk.xyxy
+            xmin = 0 if xmin < 0 else xmin
+            ymin = 0 if ymin < 0 else ymin
+            xmax = img.shape[1] if xmax >  img.shape[1] else xmax
+            ymax = img.shape[0] if ymax >  img.shape[0] else ymax
             if final_bboxes is None:
-                final_bboxes = a[arg.astype(int)]
+                final_bboxes = np.array([[xmin, ymin, xmax-xmin, ymax-ymin]])
             else:
-                final_bboxes = np.concatenate((final_bboxes, a[arg.astype(int)]))
+                final_bboxes = np.concatenate((final_bboxes, np.array([[xmin, ymin, xmax-xmin, ymax-ymin]])))
+            final_text.append(" ".join(blk.text))
 
     
     text = separator.join(final_text)
     text_ref = separator.join(final_text)
     text_ref = re.sub(re_str, '', text_ref)
+
     if not text_ref == "" and final_bboxes is not None:
         if not os.path.exists('output/'):
             os.mkdir('output/')
