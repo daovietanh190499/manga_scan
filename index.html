@@ -40,6 +40,22 @@
 		.text-box:hover {
 			cursor: pointer;
 		}
+		.text-box::before{
+			content: "" attr(title) "";
+			position: absolute;
+			border: 2px dashed darkorange;
+			top: -1rem;
+			left: 0px;
+			width: 100%;
+			height: 1rem;
+			background-color: rgba(0, 0, 0, .5);
+			color: rgba(255, 255, 255, .8);
+			font-weight: 900;
+			font-size: 0.9rem;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
 		.wrap-img .layer1 {
 			width: 100%;
 			height: 100%;
@@ -176,41 +192,42 @@ if (!window.localStorage.getItem("lang") || window.localStorage.getItem("lang") 
 	document.getElementById(window.localStorage.getItem("lang")).checked = true;
 }
 
-fetch("/folderlist").then(res => res.json())
-	.then(res => {
-		let str = ""
-		for (id in res['file_list']) {
-			let time = new Date(parseFloat(res['times'][id]) * 1000).toISOString().slice(11, 19);
-			str += `
-			<div style="width: 95%; height:3rem; justify-content: space-between; align-items: center; display: flex; border-radius: 5px; background-color: #fff; margin-top: 20px" id="${res['file_list'][id]}">
-				<span style="margin-left: 10px">${res['file_list'][id]}</span>
-				<span>${res['counts'][id]} Files </span>
-				<span style="margin-right: 10px">${time}</span>
-			</div>`
-		}
-		document.getElementById("history").innerHTML = str
-		const folder = window.localStorage.getItem("folder")
-		document.getElementById(folder).style.backgroundColor = "#00ffff"
-	})
+function update_folder() {
+	fetch("/folderlist").then(res => res.json())
+		.then(res => {
+			let str = ""
+			for (id in res['file_list']) {
+				let time = new Date(parseFloat(res['times'][id]) * 1000).toISOString().slice(11, 19);
+				str += `
+				<div style="width: 95%; height:3rem; justify-content: space-between; align-items: center; display: flex; border-radius: 5px; background-color: #fff; margin-top: 20px; padding-left: 10px; padding-right:10px" id="${res['file_list'][id]}">
+					<span>${res['file_list'][id]}</span>
+					<span>${res['counts'][id]} Files </span>
+					<span>${time}</span>
+					<button style="display:none" onclick={deltete_folder('${res['file_list'][id]}')} id="${res['file_list'][id] + "_btn"}">Xóa</button>
+				</div>`
+			}
+			document.getElementById("history").innerHTML = str
+			const folder = window.localStorage.getItem("folder")
+			document.getElementById(folder).style.backgroundColor = "#00ffff"
+			document.getElementById(folder + "_btn").style.display = "initial"
+		})
+}
+
+update_folder()
 
 setInterval(() => {
-	fetch("/folderlist").then(res => res.json())
-	.then(res => {
-		let str = ""
-		for (id in res['file_list']) {
-			let time = new Date(parseFloat(res['times'][id]) * 1000).toISOString().slice(11, 19);
-			str += `
-			<div style="width: 95%; height:3rem; justify-content: space-between; align-items: center; display: flex; border-radius: 5px; background-color: #fff; margin-top: 20px" id="${res['file_list'][id]}">
-				<span style="margin-left: 10px">${res['file_list'][id]}</span>
-				<span>${res['counts'][id]} Files </span>
-				<span style="margin-right: 10px">${time}</span>
-			</div>`
-		}
-		document.getElementById("history").innerHTML = str
-		const folder = window.localStorage.getItem("folder")
-		document.getElementById(folder).style.backgroundColor = "#00ffff"
-	})
+	update_folder()
 }, 5000)
+
+async function deltete_folder(folder) {
+	result = await fetch(endpoint + "delete/" + folder, {
+		method: 'POST',
+	})
+	.then(res => {
+		update_folder()
+		return res.json()
+	})
+}
 
 document.querySelectorAll('.chngTech').forEach(match => {
   	match.addEventListener('change',  (e) => {
@@ -464,7 +481,7 @@ function draw_box() {
 			let y2 = parseFloat(values[3])
 			width = x2 //- x1
 			height = y2 //- y1
-			text_boxes += `<div class="text-box" style="top:${y1*ratio}px; left:${x1*ratio}px; width:${width*ratio}px; height:${height*ratio}px; font-size:${parseInt(width*ratio/1.2)}px" id="${line}" onclick="change_order(this)"></div>`
+			text_boxes += `<div class="text-box" style="top:${y1*ratio}px; left:${x1*ratio}px; width:${width*ratio}px; height:${height*ratio}px;" id="${line}" onclick="change_order(this)" title=""></div>`
 		}
 	}
 	document.getElementById("wrap-result").innerHTML = text_boxes
@@ -472,7 +489,7 @@ function draw_box() {
 	for (line in orders) {
 		num = parseInt(line) + 1
 		if (orders[line] !== "") {
-			document.getElementById(orders[line]).innerText = num
+			document.getElementById(orders[line]).title = num
 		}
 		if (! (line == orders.length - 1 && orders[line] === "")) {
 			str += `<tr><td>${num}</td><td contenteditable="true" onchange="change_text(this)" id="text_${orders[line]}">${texts[orders[line]]}</td></tr>`

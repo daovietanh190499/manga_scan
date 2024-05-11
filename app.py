@@ -15,6 +15,7 @@ import numpy as np
 import os
 import re
 import glob
+import shutil
 from models import load_textdetector_model, dispatch_textdetector, OCRMIT48pxCTC
 
 from manga_ocr import MangaOcr
@@ -49,7 +50,7 @@ def infer(img, foldername, filename, lang, tech):
     re_str = r'@@@@@-mangatool-@@@@@'
     mask, mask_refined, blk_list = dispatch_textdetector(img, use_cuda)
     blk_result = ocr.ocr_blk_list(img, blk_list)
-    print(blk_result[0].text)
+    print(blk_result)
     torch.cuda.empty_cache()
 
     mask = cv2.dilate((mask > 170).astype('uint8')*255, np.ones((5,5), np.uint8), iterations=5)
@@ -239,6 +240,11 @@ async def update_file(request: Request, foldername, filename):
     except:
         print(traceback.format_exc())
         return JSONResponse(content={"message": "FAILURE"}, status_code=500)
+
+@app.post('/delete/{foldername}')
+async def delete(foldername):
+    shutil.rmtree(os.path.join("output", foldername))
+    return {"message": "SUCCESS"}
 
 @app.post('/generate/{foldername}')
 async def generate(foldername):
