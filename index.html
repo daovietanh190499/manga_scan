@@ -376,6 +376,22 @@ document.addEventListener("keypress", function(event) {
 		if (allImages.length == 0) alert("Vui lòng chọn thư mục input")
 		current_order = []
 		draw_box()
+		const folder = window.localStorage.getItem("folder")
+		fetch(endpoint + "update/" + folder + "/" + allImages[current_index].name.split(".")[0], {
+			method: "POST",
+			body: JSON.stringify({
+				"order": current_order
+			})
+		})
+		.then(res => res.json())
+		.then(res => {
+			if(res.message === "SUCCESS") {
+				console.log("update success")
+				draw_box()
+			} else {
+				alert("Update không thành công")
+			}
+		})
 	}
 });
 
