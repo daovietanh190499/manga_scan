@@ -425,7 +425,7 @@ function change_order(el) {
 		// 	current_order = [current_order]
 		// }
 	} else {
-		current_order.push(el.id)
+		current_order.push(parseInt(el.id))
 	}
 	fetch(endpoint + "update/" + folder + "/" + allImages[current_index].name.split(".")[0], {
 		method: "POST",
