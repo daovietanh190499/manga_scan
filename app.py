@@ -53,6 +53,17 @@ def infer(img, foldername, filename, lang, tech):
     # ocr.ocr_blk_list(img, blk_list)
     torch.cuda.empty_cache()
 
+    ez_result = reader.readtext(img)
+
+    for i, blk in enumerate(ez_result):
+        xmin, ymin = blk[0][0]
+        xmax, ymax = blk[0][2]
+        xmin = 0 if xmin < 0 else xmin
+        ymin = 0 if ymin < 0 else ymin
+        xmax = img.shape[1] if xmax >  img.shape[1] else xmax
+        ymax = img.shape[0] if ymax >  img.shape[0] else ymax
+        mask[int(ymin):int(ymax), int(xmin):int(xmax)] = 255
+
     mask = cv2.dilate((mask > 170).astype('uint8')*255, np.ones((5,5), np.uint8), iterations=5)
     
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -60,6 +71,15 @@ def infer(img, foldername, filename, lang, tech):
     filter_mask = np.zeros_like(mask)
     for i, blk in enumerate(blk_list):
         xmin, ymin, xmax, ymax = blk.xyxy
+        xmin = 0 if xmin < 0 else xmin
+        ymin = 0 if ymin < 0 else ymin
+        xmax = img.shape[1] if xmax >  img.shape[1] else xmax
+        ymax = img.shape[0] if ymax >  img.shape[0] else ymax
+        filter_mask[int(ymin):int(ymax), int(xmin):int(xmax)] = 1
+
+    for i, blk in enumerate(ez_result):
+        xmin, ymin = blk[0][0]
+        xmax, ymax = blk[0][2]
         xmin = 0 if xmin < 0 else xmin
         ymin = 0 if ymin < 0 else ymin
         xmax = img.shape[1] if xmax >  img.shape[1] else xmax
