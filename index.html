@@ -419,7 +419,7 @@ function checkKey(e) {
 function change_order(el) {
 	const folder = window.localStorage.getItem("folder")
 	if (current_order.includes(el.id) || current_order.includes(parseInt(el.id))) {
-		let index = current_order.indexOf(el.id)
+		let index = current_order.indexOf(parseInt(el.id))
 		current_order.splice(index, 1)
 		// if (typeof current_order === 'number') {
 		// 	current_order = [current_order]
